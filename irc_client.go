@@ -1,12 +1,10 @@
 package main
 
 import (
-	"net"
-	"os"
-	// "bytes"
-	// "strings"
 	"bufio"
 	"log"
+	"net"
+	"os"
 )
 
 func IrcConn(ch chan<- []byte) {

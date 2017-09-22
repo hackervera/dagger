@@ -1,20 +1,12 @@
 package main
 
 import (
-	//  "crypto/rand"
-	//  "fmt"
-	//  "golang.org/x/crypto/ed25519"
-	//  "log"
-	//  "bytes"
-	//  bencode "github.com/jackpal/bencode-go"
-	//  "encoding/json"
-	//  "github.com/funkygao/golib/dag"
 	"encoding/hex"
 	"errors"
-	"github.com/deckarep/golang-set"
-	//   "flag"
+
 	"reflect"
-	// "github.com/davecgh/go-spew/spew"
+
+	"github.com/deckarep/golang-set"
 	"github.com/mitchellh/mapstructure"
 )
 

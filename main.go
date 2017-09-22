@@ -3,32 +3,35 @@ package main
 import (
 	"bytes"
 	"crypto/rand"
-	"encoding/json"
-	"fmt"
-	bencode "github.com/jackpal/bencode-go"
-	"golang.org/x/crypto/ed25519"
-	"log"
-	//  "github.com/funkygao/golib/dag"
 	"encoding/hex"
-	//  "errors"
-	//   "github.com/deckarep/golang-set"
+	"encoding/json"
 	"flag"
-	//   "reflect"
-	// "github.com/davecgh/go-spew/spew"
+	"fmt"
+	"log"
+
+	bencode "github.com/jackpal/bencode-go"
 	"github.com/mitchellh/mapstructure"
+	"golang.org/x/crypto/ed25519"
 )
 
+func init() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+}
+
+// Node represents a vertex in a DAG.
 type Node struct {
 	Hash    string
 	Data    map[string]interface{}
 	Parents []string
 }
 
+// Edge represents a connection between two Nodes.
 type Edge struct {
 	From *Node
 	To   *Node
 }
 
+// Dag contains Nodes and Edges.
 type Dag struct {
 	Edges   []Edge
 	Nodes   []Node
@@ -36,12 +39,14 @@ type Dag struct {
 	PubKey  string
 }
 
+// Message represents a message being sent over json-rpc.
 type Message struct {
 	Author string
 	Type   string
 	Body   map[string]interface{}
 }
 
+// SliceIndex does something I need to remember.
 func SliceIndex(limit int, predicate func(i int) bool) int {
 	for i := 0; i < limit; i++ {
 		if predicate(i) {
@@ -61,6 +66,7 @@ func p(data interface{}) {
 	fmt.Printf("%#v\n\n", data)
 }
 
+// ProcessNode does something I need to remember.
 func ProcessNode(nodeInterface interface{}, dag *Dag, rm *RequestManager) {
 	var nodes []Node
 	err := mapstructure.Decode(nodeInterface, &nodes)
@@ -77,7 +83,7 @@ func ProcessNode(nodeInterface interface{}, dag *Dag, rm *RequestManager) {
 			if err != nil {
 				p(err.Error())
 
-				rm.NodeRequest(parentHash)
+				// rm.NodeRequest(parentHash)
 			} else {
 				p(parent)
 				dag.Nodes = append(dag.Nodes, node)
@@ -113,33 +119,24 @@ func main() {
 		clientManager.messages <- []byte("Testing")
 		for {
 		}
-	} else {
-		requests := make(chan []byte)
-		responses := make(chan []byte)
-		rm := RequestManager{Requests: make(map[string]ResponseHandler), RequestChannel: requests, Dag: &dag}
-		go connectPeer(requests, responses)
-		for {
-			response := <-responses
-			var responseMap map[string]interface{}
-			json.Unmarshal(response, &responseMap)
-			p("response map")
-			p(responseMap)
+	}
+	requests := make(chan []byte)
+	responses := make(chan []byte)
+	rm := RequestManager{Requests: make(map[string]ResponseHandler), RequestChannel: requests, Dag: &dag}
+	go connectPeer(requests, responses)
+	for {
+		response := <-responses
+		var responseMap map[string]interface{}
+		json.Unmarshal(response, &responseMap)
 
-			if responseMap["result"] != nil {
-				responseId := responseMap["id"].(string)
-				handler := rm.Requests[responseId]
-				p("handler")
-				p(handler)
-				p("processing node interface")
-				handler.Function(responseMap["result"], &dag, &rm)
-				p(dag)
-			}
+		if responseMap["result"] != nil {
+			responseId := responseMap["id"].(string)
+			handler := rm.Requests[responseId]
+			handler.Function(responseMap["result"], &dag, &rm)
+		}
 
-			if responseMap["method"] == "addNode" {
-				p("ADD NODE")
-				ProcessNode(responseMap["params"], &dag, &rm)
-				p(dag)
-			}
+		if responseMap["method"] == "addNode" {
+			ProcessNode(responseMap["params"], &dag, &rm)
 		}
 	}
 }

@@ -1,19 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"math/rand"
 	"net"
-	// "strconv"
-	// "fmt"
-	"log"
-	// "bytes"
-	// "reflect"
-	// "github.com/mitchellh/mapstructure"
-	// "sort"
-	// "time"
-	"bufio"
 )
 
 type Request struct {
