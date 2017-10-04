@@ -1,62 +1,25 @@
-package main
+package dagger
 
 import (
-	"encoding/hex"
+	"dagger/rpc"
 	"errors"
 
 	"reflect"
 
 	"github.com/deckarep/golang-set"
-	"github.com/mitchellh/mapstructure"
+	"golang.org/x/crypto/ed25519"
 )
 
-func (dag *Dag) AddNodes(response Response) {
-	var nodes []Node
-	mapstructure.Decode(response.Result, &nodes)
-	for _, node := range nodes {
-		index := SliceIndex(len(dag.Nodes), func(i int) bool { return dag.Nodes[i].Hash == node.Hash })
-		if index == -1 {
-			dag.Nodes = append(dag.Nodes, node)
-		}
-	}
+// Dag contains Nodes and Edges.
+type Dag struct {
+	Edges   []Edge
+	Nodes   []rpc.Node
+	PrivKey ed25519.PrivateKey
+	PubKey  string
 }
 
 func (dag *Dag) AddEdge(edge Edge) {
 	dag.Edges = append(dag.Edges, edge)
-}
-
-func (dag *Dag) CreateRoom(name string) {
-	body := make(map[string]string)
-	body["name"] = name
-	message := map[string]interface{}{
-		"author": dag.PubKey,
-		"type":   "room",
-		"body":   body,
-	}
-	dag.AddNode(message)
-}
-
-func (dag *Dag) CreateMessage(text string) {
-	body := make(map[string]string)
-	body["text"] = text
-	message := map[string]interface{}{
-		"author": dag.PubKey,
-		"type":   "message",
-		"body":   body,
-	}
-	dag.AddNode(message)
-}
-
-func (dag *Dag) RootNode() (node *Node) {
-	for i := range dag.Edges {
-		edge := dag.Edges[i]
-		data := edge.From.Data
-		// fmt.Println(data["Type"])
-		if data["Type"] == "room" {
-			node = edge.From
-		}
-	}
-	return node
 }
 
 func (dag *Dag) FindEdge(hash string) (edge Edge, err error) {
@@ -73,20 +36,7 @@ func (dag *Dag) FindEdge(hash string) (edge Edge, err error) {
 	return edge, err
 }
 
-func (dag *Dag) AddNode(obj map[string]interface{}) Node {
-	objSig := canonicalSign(obj, dag.PrivKey)
-	node := Node{Hash: hex.EncodeToString(objSig), Data: obj, Parents: dag.Leaves()}
-	dag.Nodes = append(dag.Nodes, node)
-	dag.Attach(&node)
-	return node
-}
-
-func (dag *Dag) AddRawNode(node Node) {
-	dag.Nodes = append(dag.Nodes, node)
-	dag.Attach(&node)
-}
-
-func (dag *Dag) Attach(node *Node) {
+func (dag *Dag) Attach(node *rpc.Node) {
 	leafNodes := dag.LeafNodes()
 	for _, leafNode := range leafNodes {
 		edge := Edge{From: &leafNode, To: node}
@@ -96,10 +46,10 @@ func (dag *Dag) Attach(node *Node) {
 	}
 }
 
-func (dag *Dag) LeafNodes() (nodes []Node) {
+func (dag *Dag) LeafNodes() (nodes []rpc.Node) {
 	leafHashes := dag.Leaves()
 	for _, hash := range leafHashes {
-		var foundNode Node
+		var foundNode rpc.Node
 		for _, node := range dag.Nodes {
 			if node.Hash == hash {
 				foundNode = node
@@ -110,23 +60,23 @@ func (dag *Dag) LeafNodes() (nodes []Node) {
 	return nodes
 }
 
-func (dag *Dag) GetNodes() (nodes []Node) {
+func (dag *Dag) GetNodes() (nodes []rpc.Node) {
 	for _, node := range dag.Nodes {
 		nodes = append(nodes, node)
 	}
 	if nodes == nil {
-		nodes = []Node{}
+		nodes = []rpc.Node{}
 	}
 	return nodes
 }
 
-func (dag *Dag) GetNode(hash string) (node Node, err error) {
+func (dag *Dag) GetNode(hash string) (node rpc.Node, err error) {
 	for _, nodeIterator := range dag.Nodes {
 		if nodeIterator.Hash == hash {
 			node = nodeIterator
 		}
 	}
-	if reflect.DeepEqual(node, Node{}) {
+	if reflect.DeepEqual(node, rpc.Node{}) {
 		err = errors.New("Node not found")
 	}
 	return node, err

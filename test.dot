@@ -1,5 +1,0 @@
-digraph depgraph {
-	rankdir=LR;
-test -> test2 [label="{Hello}"]
-test2 -> test [label="{Hello}"]
-}

@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+service Rpc {
+	rpc GetNode(Node) returns (Node){}
+}
+
+message Node{
+	string Hash = 1;
+	string Data = 2;
+	repeated string Parents = 3;
+
+}
