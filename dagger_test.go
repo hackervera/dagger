@@ -10,7 +10,6 @@ import (
 
 func Example() {
 	go StartServer()
-	//time.Sleep(time.Second)
 	client, _, err := Client()
 	if err != nil {
 		log.Fatal(err)
