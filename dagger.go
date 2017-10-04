@@ -3,10 +3,11 @@ package dagger
 import (
 	"bytes"
 	"context"
-	"dagger/rpc"
 	"fmt"
 	"log"
 	"net"
+
+	"github.com/tjgillies/dagger/rpc"
 
 	bencode "github.com/jackpal/bencode-go"
 	"golang.org/x/crypto/ed25519"

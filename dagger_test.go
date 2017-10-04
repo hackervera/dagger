@@ -2,15 +2,15 @@ package dagger
 
 import (
 	"context"
-	"dagger/rpc"
 	"fmt"
 	"log"
-	"time"
+
+	"github.com/tjgillies/dagger/rpc"
 )
 
 func Example() {
 	go StartServer()
-	time.Sleep(time.Second)
+	//time.Sleep(time.Second)
 	client, _, err := Client()
 	if err != nil {
 		log.Fatal(err)

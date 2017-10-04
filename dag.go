@@ -1,8 +1,9 @@
 package dagger
 
 import (
-	"dagger/rpc"
 	"errors"
+
+	"github.com/tjgillies/dagger/rpc"
 
 	"reflect"
 
